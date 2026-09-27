@@ -9,33 +9,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Free Disk Space on GitHub Runner
-      uses: easimon/maximize-build-space@v10
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-codeql: 'true'
-        remove-docker-images: 'true'
-
-    - name: Configure Docker Storage Directory
+    - name: Maximize Runner Space
       run: |
-        sudo systemctl stop docker.service docker.socket
-        sudo mkdir -p /buildspace/docker
-        if [ -d "/var/lib/docker" ]; then
-          sudo cp -rp /var/lib/docker/* /buildspace/docker/ 2>/dev/null || true
-          sudo rm -rf /var/lib/docker
-        fi
-        sudo ln -s /buildspace/docker /var/lib/docker
-        sudo systemctl start docker.service
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache/CodeQL
+        docker system prune -a --volumes -f
 
     - name: Checkout Code
       uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
@@ -47,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/amd64
+        file: ./Dockerfile
         push: true
         no-cache: true
         tags: ${{ secrets.DOCKER_USERNAME }}/flux-serverless:v1

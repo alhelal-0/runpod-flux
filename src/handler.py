@@ -8,19 +8,22 @@ from diffusers import FluxPipeline
 pipe = None
 
 def init():
+    """Initializes and loads the FLUX.1-dev model into GPU memory on cold start."""
     global pipe
     if pipe is None:
-        print("Loading FLUX.1-dev into GPU memory...")
+        print("Starting FLUX.1-dev model load...")
         hf_token = os.getenv("HF_TOKEN")
+        
         pipe = FluxPipeline.from_pretrained(
             "black-forest-labs/FLUX.1-dev",
             torch_dtype=torch.bfloat16,
             token=hf_token
         )
         pipe.enable_model_cpu_offload()
-        print("FLUX.1-dev loaded successfully.")
+        print("FLUX.1-dev model loaded successfully into memory.")
 
 def handler(job):
+    """Processes serverless inference requests."""
     job_input = job.get("input", {})
     
     prompt = job_input.get("prompt")
