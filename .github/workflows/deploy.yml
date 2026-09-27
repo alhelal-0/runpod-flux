@@ -20,12 +20,16 @@ jobs:
         remove-codeql: 'true'
         remove-docker-images: 'true'
 
-    - name: Move Docker Storage to Buildspace
+    - name: Configure Docker Storage Directory
       run: |
-        sudo service docker stop
-        sudo mv /var/lib/docker /buildspace/docker
+        sudo systemctl stop docker.service docker.socket
+        sudo mkdir -p /buildspace/docker
+        if [ -d "/var/lib/docker" ]; then
+          sudo cp -rp /var/lib/docker/* /buildspace/docker/ 2>/dev/null || true
+          sudo rm -rf /var/lib/docker
+        fi
         sudo ln -s /buildspace/docker /var/lib/docker
-        sudo service docker start
+        sudo systemctl start docker.service
 
     - name: Checkout Code
       uses: actions/checkout@v4
